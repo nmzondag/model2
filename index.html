@@ -8,7 +8,11 @@
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
             background-color: #0a0a0a;
@@ -19,6 +23,7 @@
             touch-action: manipulation;
         }
         
+        /* Sidebar */
         .sidebar {
             background-color: #111111;
             border-right: 1px solid #222;
@@ -33,38 +38,52 @@
         
         @media (min-width: 769px) {
             body { display: flex; }
-            .sidebar { width: 240px; min-width: 240px; position: relative; }
+            .sidebar {
+                width: 240px;
+                min-width: 240px;
+                position: relative;
+            }
         }
         
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar {
                 position: fixed;
-                top: 0; left: 0;
-                width: 280px; height: 100%;
+                top: 0;
+                left: 0;
+                width: 280px;
+                height: 100%;
                 transform: translateX(-100%);
                 padding-top: 70px;
                 box-shadow: 2px 0 10px rgba(0,0,0,0.5);
             }
-            .sidebar.open { transform: translateX(0); }
+            .sidebar.open {
+                transform: translateX(0);
+            }
         }
         
+        /* Hamburger Button (Mobile Only) */
         .hamburger {
             position: fixed;
-            top: 16px; left: 16px;
+            top: 16px;
+            left: 16px;
             z-index: 300;
             background: #1a1a1a;
             border: none;
-            width: 50px; height: 50px;
+            width: 50px;
+            height: 50px;
             border-radius: 10px;
             display: flex;
-            align-items: center; justify-content: center;
-            color: #fff;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
             font-size: 28px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         
-        @media (min-width: 769px) { .hamburger { display: none; } }
+        @media (min-width: 769px) {
+            .hamburger { display: none; }
+        }
         
         .tab, .bg-toggle {
             padding: 14px 16px;
@@ -81,80 +100,83 @@
             align-items: center;
         }
         
-        .tab:hover, .bg-toggle:hover { background-color: #252525; color: #ffffff; }
-        .tab.active { background-color: #333333; color: white; font-weight: 500; }
+        .tab:hover, .bg-toggle:hover {
+            background-color: #252525;
+            color: #ffffff;
+        }
         
-        .bg-toggle { margin-top: auto; font-weight: 500; justify-content: center; }
+        .tab.active {
+            background-color: #333333;
+            color: white;
+            font-weight: 500;
+        }
         
+        .bg-toggle {
+            margin-top: auto;
+            font-weight: 500;
+            justify-content: center;
+        }
+        
+        /* Main Viewer */
         .viewer-container {
             flex: 1;
             position: relative;
-            display: flex;
-            overflow: hidden;
         }
         
         model-viewer {
-            flex: 1;
+            width: 100%;
             height: 100%;
             background-color: #0a0a0a;
             display: block;
         }
         
-        .compare-mode .viewer-container {
-            flex-direction: row;
-        }
-        
-        .compare-mode model-viewer {
-            border-right: 1px solid #222;
-        }
-        
-        .compare-mode model-viewer:last-child {
-            border-right: none;
-        }
-        
+        /* Loading spinner */
         .loading {
             position: absolute;
-            top: 50%; left: 50%;
+            top: 50%;
+            left: 50%;
             transform: translate(-50%, -50%);
-            width: 50px; height: 50px;
+            width: 50px;
+            height: 50px;
             border: 5px solid rgba(255,255,255,0.15);
             border-top: 5px solid #ffffff;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 1s linear 360deg;
             z-index: 100;
         }
         
-        @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <!-- Hamburger Menu (Mobile Only) -->
     <button class="hamburger" id="hamburger">☰</button>
 
+    <!-- Sidebar with Tabs -->
     <div class="sidebar" id="sidebar">
-         <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
+      <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
         <div class="tab" data-src="TWR-16-full.glb">TWR16</div>
          <div class="tab" data-src="Wing_Assembly.glb">TWR 17 Rear Wing</div>
         <div class="tab" data-src="TWR-16-Front-Wing-Master.glb">TWR16 Front Wing</div>
         
-        <div class="tab" data-mode="compare" 
-             data-src1="TWR-17-full.glb" 
-             data-src2="TWR-16-full.glb">
-            TWR-17 vs TWR-16
-        </div>
-        
+        <!-- Background Toggle -->
         <div class="bg-toggle" id="bgToggle">Background: Black</div>
     </div>
 
-    <div class="viewer-container" id="viewerContainer">
+    <!-- Main 3D Viewer -->
+    <div class="viewer-container">
         <div class="loading" id="loader"></div>
         
-        <model-viewer id="model1"
+        <model-viewer
+            id="modelViewer"
             src="TWR-17-full.glb"
             alt=""
             camera-controls="true"
             auto-rotate="true"
             auto-rotate-delay="3000"
-            rotation-per-second="15deg"
+            rotation-per-second="10deg"
             shadow-intensity="0.8"
             exposure="0.85"
             environment-intensity="0.7"
@@ -162,117 +184,78 @@
             camera-orbit="45deg 55deg auto"
             field-of-view="35deg">
         </model-viewer>
-        
-        <model-viewer id="model2"
-            src="rear-wing.glb"
-            alt=""
-            camera-controls="true"
-            auto-rotate="false"
-            shadow-intensity="0.6"           <!-- Reduced for performance -->
-            exposure="0.8"
-            environment-intensity="0.6"
-            loading="eager"
-            camera-orbit="45deg 55deg auto"
-            field-of-view="35deg"
-            style="display: none;">
-        </model-viewer>
     </div>
 
     <script>
-        const model1 = document.getElementById('model1');
-        const model2 = document.getElementById('model2');
+        const modelViewer = document.getElementById('modelViewer');
         const loader = document.getElementById('loader');
         const tabs = document.querySelectorAll('.tab');
         const bgToggle = document.getElementById('bgToggle');
         const hamburger = document.getElementById('hamburger');
         const sidebar = document.getElementById('sidebar');
-        const viewerContainer = document.getElementById('viewerContainer');
         
         let isBlackBackground = true;
-        let currentMode = 'single';
-        let lastSyncTime = 0;
-        let isSyncing = false;
 
+        // Show loading spinner initially
         loader.style.display = 'block';
 
-        function handleLoad(e) {
+        // Handle model load
+        modelViewer.addEventListener('load', () => {
             loader.style.display = 'none';
-            console.log('✅ Model loaded:', e.target.id);
-        }
+            console.log('✅ Model loaded successfully');
+        });
 
-        model1.addEventListener('load', handleLoad);
-        model2.addEventListener('load', handleLoad);
-
-        // Throttled camera sync (much lighter on CPU/GPU)
-        function syncCamera(source, target) {
-            if (currentMode !== 'compare' || isSyncing) return;
-            
-            const now = Date.now();
-            if (now - lastSyncTime < 30) return;   // Limit to ~33 updates per second
-            
-            isSyncing = true;
-            lastSyncTime = now;
-            
-            try {
-                target.cameraOrbit = source.cameraOrbit;
-                target.cameraTarget = source.cameraTarget;
-                target.fieldOfView = source.fieldOfView;
-            } catch (err) {
-                console.warn("Sync skipped");
+        // Safety timeout
+        setTimeout(() => {
+            if (loader.style.display !== 'none') {
+                loader.style.display = 'none';
             }
-            
-            setTimeout(() => { isSyncing = false; }, 10);
-        }
-
-        model1.addEventListener('camera-change', () => syncCamera(model1, model2));
-        model2.addEventListener('camera-change', () => syncCamera(model2, model1));
+        }, 15000);
 
         // Tab switching
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                const mode = tab.dataset.mode;
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
+                const newSrc = tab.getAttribute('data-src');
                 
-                loader.style.display = 'block';
-
-                if (mode === 'single') {
-                    currentMode = 'single';
-                    viewerContainer.classList.remove('compare-mode');
-                    model2.style.display = 'none';
+                if (newSrc && newSrc !== modelViewer.src) {
+                    loader.style.display = 'block';
+                    modelViewer.src = newSrc;
                     
-                    model1.src = tab.dataset.src;
-                    model1.autoRotate = true;
-                    
-                } else if (mode === 'compare') {
-                    currentMode = 'compare';
-                    viewerContainer.classList.add('compare-mode');
-                    model2.style.display = 'block';
-                    
-                    model1.src = tab.dataset.src1;
-                    model2.src = tab.dataset.src2;
-                    
-                    model1.autoRotate = false;
-                    model2.autoRotate = false;
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
                 }
                 
-                if (window.innerWidth <= 768) sidebar.classList.remove('open');
+                // Close sidebar on mobile after selection
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                }
             });
         });
 
-        // Background toggle
+        // Background Toggle (Black / White)
         bgToggle.addEventListener('click', () => {
             isBlackBackground = !isBlackBackground;
-            const color = isBlackBackground ? '#0a0a0a' : '#f8f8f8';
-            model1.style.backgroundColor = color;
-            model2.style.backgroundColor = color;
-            bgToggle.textContent = isBlackBackground ? 'Background: Black' : 'Background: White';
-            if (window.innerWidth <= 768) sidebar.classList.remove('open');
+            
+            if (isBlackBackground) {
+                modelViewer.style.backgroundColor = '#0a0a0a';
+                bgToggle.textContent = 'Background: Black';
+            } else {
+                modelViewer.style.backgroundColor = '#f8f8f8';
+                bgToggle.textContent = 'Background: White';
+            }
+            
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+            }
         });
 
-        // Hamburger
-        hamburger.addEventListener('click', () => sidebar.classList.toggle('open'));
+        // Hamburger Menu Toggle
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
 
+        // Close sidebar when clicking outside (mobile)
         document.addEventListener('click', (e) => {
             if (window.innerWidth <= 768 && 
                 !sidebar.contains(e.target) && 
@@ -281,7 +264,7 @@
             }
         });
 
-        // Double tap fullscreen
+        // Double-click for fullscreen
         document.addEventListener('dblclick', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
