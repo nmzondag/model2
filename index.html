@@ -131,16 +131,15 @@
     <button class="hamburger" id="hamburger">☰</button>
 
     <div class="sidebar" id="sidebar">
-     <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
+         <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
         <div class="tab" data-src="TWR-16-full.glb">TWR16</div>
          <div class="tab" data-src="Wing_Assembly.glb">TWR 17 Rear Wing</div>
         <div class="tab" data-src="TWR-16-Front-Wing-Master.glb">TWR16 Front Wing</div>
-
         
         <div class="tab" data-mode="compare" 
              data-src1="TWR-17-full.glb" 
              data-src2="TWR-16-full.glb">
-            TWR 16 vs TWR 17 
+            TWR-17 vs TWR-16
         </div>
         
         <div class="bg-toggle" id="bgToggle">Background: Black</div>
@@ -165,13 +164,13 @@
         </model-viewer>
         
         <model-viewer id="model2"
-            src="TWR-16-full.glb"
+            src="rear-wing.glb"
             alt=""
             camera-controls="true"
             auto-rotate="false"
-            shadow-intensity="0.8"
-            exposure="0.85"
-            environment-intensity="0.7"
+            shadow-intensity="0.6"           <!-- Reduced for performance -->
+            exposure="0.8"
+            environment-intensity="0.6"
             loading="eager"
             camera-orbit="45deg 55deg auto"
             field-of-view="35deg"
@@ -191,7 +190,8 @@
         
         let isBlackBackground = true;
         let currentMode = 'single';
-        let isSyncing = false;   // Prevent feedback loop
+        let lastSyncTime = 0;
+        let isSyncing = false;
 
         loader.style.display = 'block';
 
@@ -203,29 +203,31 @@
         model1.addEventListener('load', handleLoad);
         model2.addEventListener('load', handleLoad);
 
-        // Synchronized camera movement - both models hold position until user changes them
+        // Throttled camera sync (much lighter on CPU/GPU)
         function syncCamera(source, target) {
             if (currentMode !== 'compare' || isSyncing) return;
             
+            const now = Date.now();
+            if (now - lastSyncTime < 30) return;   // Limit to ~33 updates per second
+            
             isSyncing = true;
+            lastSyncTime = now;
             
             try {
                 target.cameraOrbit = source.cameraOrbit;
                 target.cameraTarget = source.cameraTarget;
                 target.fieldOfView = source.fieldOfView;
             } catch (err) {
-                console.warn("Camera sync error:", err);
+                console.warn("Sync skipped");
             }
             
-            // Release lock after a tiny delay
-            setTimeout(() => { isSyncing = false; }, 16);
+            setTimeout(() => { isSyncing = false; }, 10);
         }
 
-        // Listen for camera changes on both models
         model1.addEventListener('camera-change', () => syncCamera(model1, model2));
         model2.addEventListener('camera-change', () => syncCamera(model2, model1));
 
-        // Tab switching logic
+        // Tab switching
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 const mode = tab.dataset.mode;
@@ -268,7 +270,7 @@
             if (window.innerWidth <= 768) sidebar.classList.remove('open');
         });
 
-        // Hamburger menu
+        // Hamburger
         hamburger.addEventListener('click', () => sidebar.classList.toggle('open'));
 
         document.addEventListener('click', (e) => {
@@ -279,7 +281,7 @@
             }
         });
 
-        // Double tap for fullscreen
+        // Double tap fullscreen
         document.addEventListener('dblclick', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
