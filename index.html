@@ -86,7 +86,6 @@
         
         .bg-toggle { margin-top: auto; font-weight: 500; justify-content: center; }
         
-        /* Viewer Area */
         .viewer-container {
             flex: 1;
             position: relative;
@@ -101,7 +100,6 @@
             display: block;
         }
         
-        /* Compare Mode - Two models side by side */
         .compare-mode .viewer-container {
             flex-direction: row;
         }
@@ -133,16 +131,15 @@
     <button class="hamburger" id="hamburger">☰</button>
 
     <div class="sidebar" id="sidebar">
-        <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
+       <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
         <div class="tab" data-src="TWR-16-full.glb">TWR16</div>
         <div class="tab" data-src="TWR-16-Front-Wing-Master.glb">TWR16 Front Wing</div>
 
         
-        <!-- New Compare Tab -->
         <div class="tab" data-mode="compare" 
-             data-src1="TWR-16-full.glb" 
-             data-src2="TWR-17-full.glb">
-            Compare: TWR-16 + TWR-17
+             data-src1="TWR-17-full.glb" 
+             data-src2="TWR-16-full.glb">
+            TWR 16 vs TWR 17 
         </div>
         
         <div class="bg-toggle" id="bgToggle">Background: Black</div>
@@ -151,7 +148,6 @@
     <div class="viewer-container" id="viewerContainer">
         <div class="loading" id="loader"></div>
         
-        <!-- Single Model Viewer -->
         <model-viewer id="model1"
             src="TWR-17-full.glb"
             alt=""
@@ -167,9 +163,8 @@
             field-of-view="35deg">
         </model-viewer>
         
-        <!-- Second Model Viewer (hidden by default) -->
         <model-viewer id="model2"
-            src="TWR-16-full.glb"
+            src="rear-wing.glb"
             alt=""
             camera-controls="true"
             auto-rotate="false"
@@ -195,31 +190,41 @@
         
         let isBlackBackground = true;
         let currentMode = 'single';
+        let syncTimeout = null;
 
         loader.style.display = 'block';
 
-        // Load handler
         function handleLoad(e) {
             loader.style.display = 'none';
-            console.log('Model loaded:', e.target.id);
+            console.log('✅ Model loaded:', e.target.id);
         }
 
         model1.addEventListener('load', handleLoad);
         model2.addEventListener('load', handleLoad);
 
-        // Synchronize camera between two models in compare mode
-        function syncCameras(source, target) {
-            if (currentMode === 'compare') {
-                target.cameraOrbit = source.cameraOrbit;
-                target.cameraTarget = source.cameraTarget;
-                target.fieldOfView = source.fieldOfView;
-            }
+        // Improved synchronized camera movement (prevents snapping)
+        function syncCamera(source, target) {
+            if (currentMode !== 'compare') return;
+            
+            // Clear any pending sync to avoid feedback loops
+            if (syncTimeout) clearTimeout(syncTimeout);
+            
+            syncTimeout = setTimeout(() => {
+                try {
+                    target.cameraOrbit = source.cameraOrbit;
+                    target.cameraTarget = source.cameraTarget;
+                    target.fieldOfView = source.fieldOfView;
+                } catch (err) {
+                    console.warn("Sync error:", err);
+                }
+            }, 10); // Small delay for smoothness
         }
 
-        model1.addEventListener('camera-change', () => syncCameras(model1, model2));
-        model2.addEventListener('camera-change', () => syncCameras(model2, model1));
+        // Sync when user interacts with either model
+        model1.addEventListener('camera-change', () => syncCamera(model1, model2));
+        model2.addEventListener('camera-change', () => syncCamera(model2, model1));
 
-        // Tab Click Handler
+        // Tab switching
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 const mode = tab.dataset.mode;
@@ -252,7 +257,7 @@
             });
         });
 
-        // Background Toggle
+        // Background toggle
         bgToggle.addEventListener('click', () => {
             isBlackBackground = !isBlackBackground;
             const color = isBlackBackground ? '#0a0a0a' : '#f8f8f8';
@@ -262,7 +267,7 @@
             if (window.innerWidth <= 768) sidebar.classList.remove('open');
         });
 
-        // Hamburger
+        // Hamburger menu
         hamburger.addEventListener('click', () => sidebar.classList.toggle('open'));
 
         document.addEventListener('click', (e) => {
@@ -273,7 +278,7 @@
             }
         });
 
-        // Double tap fullscreen
+        // Double tap for fullscreen
         document.addEventListener('dblclick', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
