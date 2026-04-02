@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title></title>
     
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
@@ -19,20 +19,47 @@
             overflow: hidden;
             height: 100vh;
             width: 100vw;
-            display: flex;
-            font-family: system-ui, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
+            touch-action: manipulation;
         }
         
-        /* Sidebar */
+        /* Sidebar / Bottom Bar Container */
         .sidebar {
-            width: 240px;
             background-color: #111111;
             border-right: 1px solid #222;
-            padding: 20px 12px;
+            padding: 16px 12px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Desktop: Left sidebar */
+        @media (min-width: 769px) {
+            body { display: flex; }
+            .sidebar {
+                width: 240px;
+                min-width: 240px;
+            }
+        }
+        
+        /* Mobile: Bottom tab bar */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: 68px;
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 10px 12px;
+                border-right: none;
+                border-top: 1px solid #222;
+                gap: 8px;
+            }
         }
         
         .tab, .bg-toggle {
@@ -42,9 +69,13 @@
             border: none;
             text-align: left;
             cursor: pointer;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 15px;
+            white-space: nowrap;
             transition: all 0.2s;
+            min-height: 48px; /* Better touch target */
+            display: flex;
+            align-items: center;
         }
         
         .tab:hover, .bg-toggle:hover {
@@ -55,22 +86,27 @@
         .tab.active {
             background-color: #333333;
             color: white;
+            font-weight: 500;
         }
         
         .bg-toggle {
-            margin-top: 10px;
+            margin-top: auto;
             font-weight: 500;
+            justify-content: center;
         }
         
         /* Main Viewer */
         .viewer-container {
             flex: 1;
             position: relative;
+            min-height: 0;
         }
         
         model-viewer {
             width: 100%;
             height: 100%;
+            background-color: #0a0a0a;
+            touch-action: none; /* Let model-viewer handle touch */
         }
         
         /* Loading spinner */
@@ -91,12 +127,19 @@
         @keyframes spin {
             to { transform: translate(-50%, -50%) rotate(360deg); }
         }
+        
+        /* Mobile improvements */
+        @media (max-width: 768px) {
+            .tab, .bg-toggle {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
+    <!-- Sidebar / Bottom Bar -->
+     <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
         <div class="tab" data-src="TWR-16-full.glb">TWR16</div>
         <div class="tab" data-src="TWR-16-Front-Wing-Master.glb">TWR16 Front Wing</div>
 
@@ -111,7 +154,7 @@
         
         <model-viewer
             id="modelViewer"
-            src="TWR-16-Front-Wing-Master.glb"
+            src="TWR-17-full.glb"
             alt=""
             camera-controls="true"
             auto-rotate="true"
@@ -122,7 +165,9 @@
             environment-intensity="0.85"
             loading="eager"
             ar="true"
-            ar-modes="webxr scene-viewer quick-look">
+            ar-modes="webxr scene-viewer quick-look"
+            camera-orbit="45deg 60deg 15m"  <!-- Better default view for mobile -->
+            field-of-view="30deg">
         </model-viewer>
     </div>
 
@@ -132,7 +177,7 @@
         const tabs = document.querySelectorAll('.tab');
         const bgToggle = document.getElementById('bgToggle');
         
-        let isBlackBackground = true;   // Start with black
+        let isBlackBackground = true;
 
         // Show spinner
         loader.style.display = 'block';
@@ -162,7 +207,7 @@
             });
         });
 
-        // Background Toggle (Black ↔ White)
+        // Background Toggle
         bgToggle.addEventListener('click', () => {
             isBlackBackground = !isBlackBackground;
             
@@ -175,23 +220,12 @@
             }
         });
 
-        // Fullscreen shortcuts
+        // Fullscreen shortcuts (works on mobile too)
         document.addEventListener('dblclick', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
             } else {
                 document.exitFullscreen();
-            }
-        });
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'f') {
-                e.preventDefault();
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(() => {});
-                } else {
-                    document.exitFullscreen();
-                }
             }
         });
     </script>
