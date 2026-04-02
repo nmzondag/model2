@@ -23,43 +23,71 @@
             touch-action: manipulation;
         }
         
-        /* Sidebar / Bottom Bar Container */
+        /* Sidebar */
         .sidebar {
             background-color: #111111;
             border-right: 1px solid #222;
-            padding: 16px 12px;
+            padding: 20px 12px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease;
+            z-index: 200;
         }
         
-        /* Desktop: Left sidebar */
+        /* Desktop Layout */
         @media (min-width: 769px) {
             body { display: flex; }
             .sidebar {
                 width: 240px;
                 min-width: 240px;
+                position: relative;
             }
         }
         
-        /* Mobile: Bottom tab bar */
+        /* Mobile Layout */
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
             }
             .sidebar {
-                width: 100%;
-                height: 68px;
-                flex-direction: row;
-                overflow-x: auto;
-                overflow-y: hidden;
-                padding: 10px 12px;
-                border-right: none;
-                border-top: 1px solid #222;
-                gap: 8px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 280px;
+                height: 100%;
+                transform: translateX(-100%);
+                padding-top: 70px;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.5);
             }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+        
+        /* Hamburger Button */
+        .hamburger {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 300;
+            background: #1a1a1a;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #ffffff;
+            font-size: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        @media (min-width: 769px) {
+            .hamburger { display: none; }
         }
         
         .tab, .bg-toggle {
@@ -73,7 +101,7 @@
             font-size: 15px;
             white-space: nowrap;
             transition: all 0.2s;
-            min-height: 48px; /* Better touch target */
+            min-height: 52px;
             display: flex;
             align-items: center;
         }
@@ -106,7 +134,7 @@
             width: 100%;
             height: 100%;
             background-color: #0a0a0a;
-            touch-action: none; /* Let model-viewer handle touch */
+            touch-action: none;
         }
         
         /* Loading spinner */
@@ -127,19 +155,15 @@
         @keyframes spin {
             to { transform: translate(-50%, -50%) rotate(360deg); }
         }
-        
-        /* Mobile improvements */
-        @media (max-width: 768px) {
-            .tab, .bg-toggle {
-                padding: 12px 14px;
-                font-size: 14px;
-            }
-        }
     </style>
 </head>
 <body>
-    <!-- Sidebar / Bottom Bar -->
-     <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
+    <!-- Hamburger Menu Button (Mobile Only) -->
+    <button class="hamburger" id="hamburger">☰</button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
         <div class="tab" data-src="TWR-16-full.glb">TWR16</div>
         <div class="tab" data-src="TWR-16-Front-Wing-Master.glb">TWR16 Front Wing</div>
 
@@ -166,7 +190,7 @@
             loading="eager"
             ar="true"
             ar-modes="webxr scene-viewer quick-look"
-            camera-orbit="45deg 60deg 15m"  <!-- Better default view for mobile -->
+            camera-orbit="45deg 60deg 15m"
             field-of-view="30deg">
         </model-viewer>
     </div>
@@ -176,6 +200,8 @@
         const loader = document.getElementById('loader');
         const tabs = document.querySelectorAll('.tab');
         const bgToggle = document.getElementById('bgToggle');
+        const hamburger = document.getElementById('hamburger');
+        const sidebar = document.getElementById('sidebar');
         
         let isBlackBackground = true;
 
@@ -204,6 +230,11 @@
                     tabs.forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
                 }
+                
+                // Close sidebar after selection on mobile
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                }
             });
         });
 
@@ -218,9 +249,28 @@
                 modelViewer.style.backgroundColor = '#f8f8f8';
                 bgToggle.textContent = 'Background: White';
             }
+            
+            // Close sidebar on mobile after toggle
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+            }
         });
 
-        // Fullscreen shortcuts (works on mobile too)
+        // Hamburger Menu Toggle
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                e.target !== hamburger) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // Fullscreen (Double tap works well on mobile)
         document.addEventListener('dblclick', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
