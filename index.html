@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
     
-    <!-- Reliable model-viewer script -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     
     <style>
@@ -20,15 +19,61 @@
             overflow: hidden;
             height: 100vh;
             width: 100vw;
+            display: flex;
+            font-family: system-ui, sans-serif;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background-color: #111111;
+            border-right: 1px solid #222;
+            padding: 20px 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .tab, .bg-toggle {
+            padding: 14px 16px;
+            color: #cccccc;
+            background-color: #1a1a1a;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover, .bg-toggle:hover {
+            background-color: #252525;
+            color: #ffffff;
+        }
+        
+        .tab.active {
+            background-color: #333333;
+            color: white;
+        }
+        
+        .bg-toggle {
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        
+        /* Main Viewer */
+        .viewer-container {
+            flex: 1;
+            position: relative;
         }
         
         model-viewer {
             width: 100%;
             height: 100%;
-            background-color: #0a0a0a;
         }
         
-        /* Loading spinner - visual only -->
+        /* Loading spinner */
         .loading {
             position: absolute;
             top: 50%;
@@ -49,11 +94,21 @@
     </style>
 </head>
 <body>
-    <div style="position: relative; width: 100%; height: 100%;">
-        <!-- Loading spinner -->
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="tab active" data-src="TWR-17-full.glb">TWR17</div>
+        <div class="tab" data-src="TWR-16-full.glb">TWR16</div>
+        <div class="tab" data-src="TWR-16-Front-Wing-Master.glb">TWR16 Front Wing</div>
+
+        
+        <!-- Background Toggle -->
+        <div class="bg-toggle" id="bgToggle">Background: Black</div>
+    </div>
+
+    <!-- 3D Viewer -->
+    <div class="viewer-container">
         <div class="loading" id="loader"></div>
         
-        <!-- Interactive SolidWorks GLB Model REPLACE src= WITH GLB FILE -->
         <model-viewer
             id="modelViewer"
             src="TWR-16-Front-Wing-Master.glb"
@@ -74,23 +129,53 @@
     <script>
         const modelViewer = document.getElementById('modelViewer');
         const loader = document.getElementById('loader');
+        const tabs = document.querySelectorAll('.tab');
+        const bgToggle = document.getElementById('bgToggle');
         
-        // Show spinner until model loads
+        let isBlackBackground = true;   // Start with black
+
+        // Show spinner
         loader.style.display = 'block';
-        
-        modelViewer.addEventListener('load', () => {
+
+        function handleModelLoad() {
             loader.style.display = 'none';
-            console.log('✅ Model loaded successfully - Interaction enabled');
-        });
-        
-        // Safety fallback
+        }
+
+        modelViewer.addEventListener('load', handleModelLoad);
+
+        // Safety timeout
         setTimeout(() => {
-            if (loader.style.display !== 'none') {
-                loader.style.display = 'none';
-            }
+            if (loader.style.display !== 'none') loader.style.display = 'none';
         }, 15000);
-        
-        // Double-click for fullscreen
+
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const newSrc = tab.getAttribute('data-src');
+                if (newSrc && newSrc !== modelViewer.src) {
+                    loader.style.display = 'block';
+                    modelViewer.src = newSrc;
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                }
+            });
+        });
+
+        // Background Toggle (Black ↔ White)
+        bgToggle.addEventListener('click', () => {
+            isBlackBackground = !isBlackBackground;
+            
+            if (isBlackBackground) {
+                modelViewer.style.backgroundColor = '#0a0a0a';
+                bgToggle.textContent = 'Background: Black';
+            } else {
+                modelViewer.style.backgroundColor = '#f8f8f8';
+                bgToggle.textContent = 'Background: White';
+            }
+        });
+
+        // Fullscreen shortcuts
         document.addEventListener('dblclick', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
@@ -99,7 +184,6 @@
             }
         });
         
-        // Press F key for fullscreen
         document.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 'f') {
                 e.preventDefault();
